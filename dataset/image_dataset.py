@@ -21,4 +21,4 @@ class ImgDataset(Dataset):
         img = T.ToTensor()(Image.open(img_path).convert('RGB')) #Added convert to RGB
         if self.transform:
             img = self.transform(img)
-        return self.transform(img)
+        return img 

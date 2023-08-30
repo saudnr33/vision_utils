@@ -12,4 +12,4 @@ class ResNet50_encoder(nn.Module):
 
     def forward(self, x):
         b, _, _, _ = x.size()
-        return self.backbone(x).view(b, -1)
+        return self.backbone(x).view(-1, 2048)

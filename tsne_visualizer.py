@@ -4,15 +4,10 @@ import os
 import glob
 from dataset.image_dataset import ImgDataset
 import os
-import sys
-import cv2
 import torch
-import random
 import argparse
 import numpy as np
 from tqdm import tqdm
-
-import umap
 from sklearn.manifold import TSNE
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
@@ -107,6 +102,47 @@ def get_embeddings(data_loader, model, run_identifier = "Real"):
             features = np.concatenate([features, output])
     return features
 
+def get_cmap():
+    return np.array(([1.0, 0.0, 0.0], 
+                     [0.0, 1.0, 0.0],
+                     [0.0, 0.0, 1.0]))
+
+def scatter_plot(features, labels, names = None):
+    # initialize a matplotlib plot
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    cmap = get_cmap()
+    
+    if names == None:
+        names = [f'dataset {i + 1}' for i in range(len(np.unique(labels))) ]
+
+
+    # for every class, we'll add a scatter plot separately
+    for label in np.unique(labels):
+        # find the samples of the current class in the data
+        indices = features[labels == label]
+
+        # extract the coordinates of the points of this class only
+        current_tx = indices[:, 0]
+        current_ty = indices[:, 1]
+
+        # add a scatter plot with the corresponding color and label
+        text =names[int(label)]
+        
+        ax.scatter(current_tx, current_ty, c=cmap[int(label)].reshape(1,-1), label=text, alpha=0.5)
+
+    # build a legend using the labels we set previously
+    ax.legend(loc="best")
+
+    # finally, show the plot
+    plt.show()
+
+def normalize_features(x):
+    value_range = np.max(x) - np.min(x)
+    starts_from_zero = x - np.min(x)
+    return starts_from_zero / value_range
+
 
 def visualize(args):
 
@@ -121,32 +157,30 @@ def visualize(args):
     model = get_model(backbone)
 
 
-
-    for dataset in datasets:
+    combined_features, combined_labels, combined_img_paths = [], [], []
+    for i, dataset in enumerate(datasets):
 
         imgs_paths = glob.glob(os.path.join(os.path.abspath(dataset),
                                             "*"))
         imgs_paths = np.random.permutation(imgs_paths).tolist()
         if n_samples:
             imgs_paths = imgs_paths[:n_samples]
-        print(imgs_paths)
         ImgDataset_loader = get_data(imgs_paths,backbone, batch_size = batch_size)
         imgs_embeddings = get_embeddings(ImgDataset_loader, model, run_identifier = "Real")
-        print(np.shape(imgs_embeddings))
-        break
-    # if args.dataset:
-    #     for i, section in enumerate(args.dataset):
+        combined_features.append(imgs_embeddings)
+        combined_labels.append(np.ones(imgs_embeddings.shape[0]) * i)
+        combined_img_paths.extend(imgs_paths)
 
-    #         img_names = []
-    #         for f in os.listdir(section): 
-    #             if f.endswith(".png"):
-    #                 img_names.append(os.path.join(section, f))
-    #         img_names = np.random.permutation(img_names).tolist()[:n_samples]
-    #         segmented_loader =  get_data(segmented_img_names, sensim = False)
-    #         segmented_features = get_embeddings(segmented_loader, model, run="dataA images")
-    #         combined_features.append(segmented_features)
-    #         labels.append(np.ones(segmented_features.shape[0]) * i + 5)
-    #         image_names.extend(segmented_img_names)
+    combined_features = np.concatenate(combined_features)
+    combined_labels = np.concatenate(combined_labels)
+    
+    perplexity = combined_features.shape[0] // len(datasets)
+    features = TSNE(n_components=2, perplexity=perplexity).fit_transform(
+        combined_features
+    )
+    features[:, 0] = normalize_features(features[:, 0])
+    features[:, 1] = normalize_features(features[:, 1])
+    scatter_plot(features, combined_labels,datasets_names )
 
 
 
