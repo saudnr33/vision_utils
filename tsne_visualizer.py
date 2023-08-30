@@ -15,7 +15,9 @@ from models.ResNet import ResNet50_encoder
 import torchvision.transforms as T
 
 
-
+'''
+To Do: Add Comments!
+'''
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
