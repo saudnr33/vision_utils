@@ -146,6 +146,23 @@ def normalize_features(x):
     return starts_from_zero / value_range
 
 
+
+def feature_visualizer(features, labels, dataset_names):
+    '''
+    For external Use!
+
+    To Do: 1. Merge with visualize function.
+            2. Run in batches. 
+    '''
+
+    perplexity = features.shape[0] // len(np.unique(labels))
+    features = TSNE(n_components=2, perplexity=perplexity).fit_transform(
+        features
+    )
+    features[:, 0] = normalize_features(features[:, 0])
+    features[:, 1] = normalize_features(features[:, 1])
+    scatter_plot(features, labels,dataset_names )
+
 def visualize(args):
 
     datasets = args.datasets

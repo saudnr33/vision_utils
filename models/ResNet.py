@@ -3,6 +3,8 @@ import torch.nn.functional as F
 from torchvision.models import resnet50, ResNet50_Weights
 import torch
 
+
+
 class ResNet50_encoder(nn.Module):
     def __init__(self):
         super().__init__()
