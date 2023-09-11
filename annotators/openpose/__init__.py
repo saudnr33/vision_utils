@@ -7,7 +7,6 @@
 
 
 import os
-os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 import torch
 import numpy as np
@@ -15,12 +14,9 @@ from . import util
 from .body import Body
 from .hand import Hand
 from .face import Face
-from annotator.util import annotator_ckpts_path
+from utils.download_util import load_file_from_url
 
 
-body_model_path = "https://huggingface.co/lllyasviel/Annotators/resolve/main/body_pose_model.pth"
-hand_model_path = "https://huggingface.co/lllyasviel/Annotators/resolve/main/hand_pose_model.pth"
-face_model_path = "https://huggingface.co/lllyasviel/Annotators/resolve/main/facenet.pth"
 
 
 def draw_pose(pose, H, W, draw_body=True, draw_hand=True, draw_face=True):
@@ -45,22 +41,24 @@ def draw_pose(pose, H, W, draw_body=True, draw_hand=True, draw_face=True):
 
 class OpenposeDetector:
     def __init__(self):
-        body_modelpath = os.path.join(annotator_ckpts_path, "body_pose_model.pth")
-        hand_modelpath = os.path.join(annotator_ckpts_path, "hand_pose_model.pth")
-        face_modelpath = os.path.join(annotator_ckpts_path, "facenet.pth")
+
+        body_modelpath = os.path.join("annotators/checkpoints", "body_pose_model.pth")
+        hand_modelpath = os.path.join("annotators/checkpoints", "hand_pose_model.pth")
+        face_modelpath = os.path.join("annotators/checkpoints", "facenet.pth")
 
         if not os.path.exists(body_modelpath):
-            from basicsr.utils.download_util import load_file_from_url
-            load_file_from_url(body_model_path, model_dir=annotator_ckpts_path)
+            load_file_from_url("https://huggingface.co/lllyasviel/Annotators/resolve/main/body_pose_model.pth",
+                                model_dir=os.path.dirname(body_modelpath), 
+                                file_name= os.path.basename(body_modelpath))
 
         if not os.path.exists(hand_modelpath):
-            from basicsr.utils.download_util import load_file_from_url
-            load_file_from_url(hand_model_path, model_dir=annotator_ckpts_path)
-
+            load_file_from_url("https://huggingface.co/lllyasviel/Annotators/resolve/main/hand_pose_model.pth",
+                                model_dir=os.path.dirname(hand_modelpath), 
+                                file_name= os.path.basename(hand_modelpath))
         if not os.path.exists(face_modelpath):
-            from basicsr.utils.download_util import load_file_from_url
-            load_file_from_url(face_model_path, model_dir=annotator_ckpts_path)
-
+            load_file_from_url("https://huggingface.co/lllyasviel/Annotators/resolve/main/facenet.pth",
+                                model_dir=os.path.dirname(face_modelpath), 
+                                file_name= os.path.basename(face_modelpath))
         self.body_estimation = Body(body_modelpath)
         self.hand_estimation = Hand(hand_modelpath)
         self.face_estimation = Face(face_modelpath)
