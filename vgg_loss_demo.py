@@ -5,9 +5,9 @@
 import torch
 from torch import optim
 from torchvision import io as tio
-from torchvision.transforms import functional as TF
+from torchvision.transforms import functional as F
 
-import vgg_loss
+import metrics.vgg_loss as vgg_loss
 
 
 def main():
@@ -18,7 +18,7 @@ def main():
     crit_tv = vgg_loss.TVLoss(p=2)
 
     target = tio.read_image('DSC00261.jpg')[None] / 255
-    target = TF.resize(target, (256, 256), 3).to(device)
+    target = F.resize(target, (256, 256), 3).to(device)
     target_act = crit_vgg.get_features(target)
 
     input = torch.rand_like(target) / 255 + 0.5
@@ -37,7 +37,7 @@ def main():
     except KeyboardInterrupt:
         pass
 
-    TF.to_pil_image(input[0].clamp(0, 1)).save('out.png')
+    F.to_pil_image(input[0].clamp(0, 1)).save('out.png')
 
 
 if __name__ == '__main__':
